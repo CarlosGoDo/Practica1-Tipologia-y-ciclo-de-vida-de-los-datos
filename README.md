@@ -59,7 +59,7 @@ dataset/datos_finales.csv
 ## Ejemplo replicable de uso
 
 ```bash
-python source/scraping_provincias.py
+python source/scraping_provincias.py --output dataset/datos_raw.csv --timeout 10 --sleep 0.5
 ```
 
 Después, ejecutar el notebook source/script_limpieza.ipynb para obtener el dataset final.
