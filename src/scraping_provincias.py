@@ -91,55 +91,7 @@ def parse_province_generic(prov_link, headers):
     return limpiar_tabla_base(df)
 
 
-'''def parse_tabla_extranjeros_manual(prov_link, headers):
-    """
-    Lee la tabla especial preservando el texto original:
-    Provincia | Extranjeros totales | Provincia | % de extranjeros
-    """
-    response = requests.get(prov_link, headers=headers, timeout=20)
-    response.raise_for_status()
 
-    soup = parse(response.text, "lxml")
-    table = soup.find("table", class_="wikitable")
-
-    if table is None:
-        raise ValueError("No se encontró la tabla de extranjeros")
-
-    rows = table.find_all("tr")
-
-    izquierda = []
-    derecha = []
-
-    for row in rows[1:]:
-        cells = row.find_all(["td", "th"])
-        textos = [c.get_text(" ", strip=True) for c in cells]
-
-        if len(textos) < 4:
-            continue
-
-        prov_izq, extr_tot, prov_der, pct_ext = textos[:4]
-
-        if prov_izq:
-            izquierda.append({
-                "Provincia": prov_izq,
-                "Extranjeros totales": extr_tot
-            })
-
-        if prov_der:
-            derecha.append({
-                "Provincia": prov_der,
-                "% de extranjeros": pct_ext
-            })
-
-    df_izq = pd.DataFrame(izquierda)
-    df_der = pd.DataFrame(derecha)
-
-    df_izq = limpiar_tabla_base(df_izq)
-    df_der = limpiar_tabla_base(df_der)
-
-    df = df_izq.merge(df_der, on="Provincia", how="outer")
-    return df
-'''
 def parse_tabla_extranjeros_manual(prov_link, headers):
     response = requests.get(prov_link, headers=headers, timeout=20)
     response.raise_for_status()
