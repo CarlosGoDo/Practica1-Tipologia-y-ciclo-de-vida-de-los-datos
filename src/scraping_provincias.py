@@ -1,4 +1,5 @@
 import requests
+import re
 from bs4 import BeautifulSoup as parse
 from io import StringIO
 import pandas as pd
