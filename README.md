@@ -67,7 +67,7 @@ Después, ejecutar el notebook source/script_limpieza.ipynb para obtener el data
 ## Dataset publicado
 
 DOI de Zenodo:
-[PENDIENTE DE AÑADIR]
+https://zenodo.org/records/19462356
 
 ## Vídeo explicativo
 
