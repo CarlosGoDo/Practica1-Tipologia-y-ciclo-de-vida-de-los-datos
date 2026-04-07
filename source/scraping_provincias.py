@@ -1,8 +1,10 @@
 import requests
-import re
 from bs4 import BeautifulSoup as parse
 from io import StringIO
 import pandas as pd
+import argparse
+import time
+import re
 
 
 URL_BASE = "https://es.wikipedia.org"
@@ -13,8 +15,8 @@ HEADERS = {
 }
 
 
-def get_annex(page_url, headers):
-    response = requests.get(page_url, headers=headers, timeout=20)
+def get_annex(page_url, headers, timeout):
+    response = requests.get(page_url, headers=headers, timeout=timeout)
     response.raise_for_status()
 
     soup = parse(response.text, "lxml")
@@ -61,7 +63,6 @@ def limpiar_tabla_base(df):
     if "Provincia" not in df.columns:
         return None
 
-    # si por alguna razón hay varias columnas llamadas Provincia
     if isinstance(df["Provincia"], pd.DataFrame):
         df["Provincia"] = df["Provincia"].iloc[:, 0]
 
@@ -73,8 +74,8 @@ def limpiar_tabla_base(df):
     return df
 
 
-def parse_province_generic(prov_link, headers):
-    response = requests.get(prov_link, headers=headers, timeout=20)
+def parse_province_generic(prov_link, headers, timeout):
+    response = requests.get(prov_link, headers=headers, timeout=timeout)
     response.raise_for_status()
 
     soup = parse(response.text, "lxml")
@@ -92,9 +93,8 @@ def parse_province_generic(prov_link, headers):
     return limpiar_tabla_base(df)
 
 
-
-def parse_tabla_extranjeros_manual(prov_link, headers):
-    response = requests.get(prov_link, headers=headers, timeout=20)
+def parse_tabla_extranjeros_manual(prov_link, headers, timeout):
+    response = requests.get(prov_link, headers=headers, timeout=timeout)
     response.raise_for_status()
 
     soup = parse(response.text, "lxml")
@@ -109,12 +109,10 @@ def parse_tabla_extranjeros_manual(prov_link, headers):
     derecha = []
 
     def extraer_numero_total(texto):
-        # Ejemplos válidos: 1.072.173 / 32.439 / 5.085
         m = re.search(r"\d{1,3}(?:\.\d{3})+", texto)
         return m.group(0) if m else None
 
     def extraer_porcentaje(texto):
-        # Ejemplos válidos: 23,0 / 21,8 / 7,4 / 5,9
         m = re.search(r"\d{1,2},\d", texto)
         return m.group(0) if m else None
 
@@ -151,8 +149,8 @@ def parse_tabla_extranjeros_manual(prov_link, headers):
 
     return df_izq.merge(df_der, on="Provincia", how="outer")
 
+
 def es_link_relevante(link):
-    # ignoramos anexos que no son tablas provinciales útiles
     irrelevantes = [
         "Anexo:Provincias_de_Espa%C3%B1a_por_IDH",
         "Anexo:Banderas_espa%C3%B1olas",
@@ -164,8 +162,18 @@ def es_link_relevante(link):
     return not any(x in link for x in irrelevantes)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", default="datos_raw.csv")
+    parser.add_argument("--timeout", type=int, default=20)
+    parser.add_argument("--sleep", type=float, default=0.0)
+    return parser.parse_args()
+
+
 def main():
-    links = get_annex(URL_PROVINCIAS, HEADERS)
+    args = parse_args()
+
+    links = get_annex(URL_PROVINCIAS, HEADERS, args.timeout)
     print("Num links:", len(links))
 
     df_global = None
@@ -176,10 +184,13 @@ def main():
                 print("Me salto:", link)
                 continue
 
+            if args.sleep > 0:
+                time.sleep(args.sleep)
+
             if "Extranjeros_en_Espa%C3%B1a_por_provincias" in link:
-                df = parse_tabla_extranjeros_manual(link, HEADERS)
+                df = parse_tabla_extranjeros_manual(link, HEADERS, args.timeout)
             else:
-                df = parse_province_generic(link, HEADERS)
+                df = parse_province_generic(link, HEADERS, args.timeout)
 
             if df is None or "Provincia" not in df.columns:
                 print("Me salto:", link)
@@ -200,11 +211,8 @@ def main():
         except Exception as e:
             print("Me salto:", link, "| Error:", e)
 
-    df_global.to_csv("datos_raw.csv", index=False)
-    print("CSV guardado como datos_raw.csv")
-
-
-
+    df_global.to_csv(args.output, index=False)
+    print(f"CSV guardado como {args.output}")
 
 
 if __name__ == "__main__":
