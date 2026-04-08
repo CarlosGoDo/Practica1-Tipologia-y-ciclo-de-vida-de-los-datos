@@ -72,7 +72,7 @@ https://zenodo.org/records/19462356
 ## Vídeo explicativo
 
 Enlace al vídeo:
-[PENDIENTE DE AÑADIR]
+https://drive.google.com/file/d/105EpqJ4YWI7RYSQ4VUGqj__8KkrKrPvp/view?usp=sharing
 
 ## Licencia del dataset
 
